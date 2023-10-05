@@ -1,11 +1,10 @@
-import sys
-sys.path.append('..')
+import os
 import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from improved_diffusion import dist_util, logger
-from improved_diffusion.script_util import (
+from . import dist_util, logger
+from .script_util import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
     create_model_and_diffusion,
@@ -53,8 +52,9 @@ def create_argparser(ddpm_path):
     return parser
 
 class cifar_ddpm(nn.Module):
-    def __init__(self, sigma, ddpm_path = 'pretrained_models/cifar10_uncond_50M_500K.pt', device = 'cuda'):
+    def __init__(self, sigma, ddpm_path = 'care/cifar10_uncond_50M_500K.pt', device = 'cuda'):
         super(cifar_ddpm,self).__init__()
+        ddpm_path = os.path.join(os.path.expanduser("~"), '.armory/saved_models/', ddpm_path)
         self.ddpm_path = ddpm_path
         self.device = device
         self.args = create_argparser(self.ddpm_path).parse_args([])
@@ -63,7 +63,6 @@ class cifar_ddpm(nn.Module):
         self.t = self.get_t(self.sigma)
         self.sqrt_alpha_t = self.diffusion.sqrt_alphas_cumprod[self.t]
         
-    @torch.no_grad()
     def forward(self,x):
         ## denoise with one step, currently, I can not run more steps owing to the constrain of the resource.. ##
         ## notice, the range of the input is [0,1] ##

@@ -4,7 +4,7 @@ botocore==1.31.58
 carla==0.9.13
 certifi==2022.12.7
 charset-normalizer==2.1.1
-clip @ git+https://github.com/openai/CLIP.git@a1d071733d7111c9c014f024669f959182114e33
+git+https://github.com/openai/CLIP.git
 cmake==3.25.0
 filelock==3.9.0
 ftfy==6.1.1

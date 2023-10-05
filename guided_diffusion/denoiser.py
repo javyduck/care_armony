@@ -2,8 +2,8 @@ import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from guided_diffusion import dist_util, logger
-from guided_diffusion.script_util import (
+from . import dist_util, logger
+from .script_util import (
     NUM_CLASSES,
     model_and_diffusion_defaults,
     create_model_and_diffusion,

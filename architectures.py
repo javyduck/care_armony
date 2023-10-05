@@ -4,16 +4,16 @@ import torch.nn.init as init
 import clip
 from torchvision.models.resnet import resnet50
 import torch.backends.cudnn as cudnn
-from archs.cifar_resnet import resnet as resnet_cifar
-from datasets import get_normalize_layer, get_main_text_weights, get_knowledge_text_weights, get_knowledge_sentences, get_knowledge_rules, get_num_classes
+from .archs.cifar_resnet import resnet as resnet_cifar
+from .datasets import get_normalize_layer, get_main_text_weights, get_knowledge_text_weights, get_knowledge_sentences, get_knowledge_rules, get_num_classes
 from torch.nn.functional import interpolate
 from torch_geometric.nn import GCNConv, SAGEConv, GATv2Conv, ChebConv
 from torch.distributions.categorical import Categorical
 from torch.distributions.bernoulli import Bernoulli
 from torchvision.transforms import Compose, Resize, Normalize
 from torch_sparse import SparseTensor
-from guided_diffusion import imagenet_gdm
-from improved_diffusion import cifar_ddpm
+from .guided_diffusion import imagenet_gdm
+from .improved_diffusion import cifar_ddpm
 import numpy as np
 # from transformers import AutoModelForImageClassification
 import random
@@ -47,7 +47,7 @@ def get_architecture(arch: str, dataset: str, CLIP = False) -> torch.nn.Module:
     return torch.nn.Sequential(normalize_layer, model)
 
 class robust_clip(torch.nn.Module):
-    def __init__(self, arch, dataset, reasoning = False, knowledge_path = None, noise_sd = 0., denoising = False, gcn_model = None, use_classifier = False, device = 'cuda'):
+    def __init__(self, arch, dataset, reasoning = False, knowledge_path = None, noise_sd = 0., denoising = False, denoising_ckpt = None, gcn_model = None, use_classifier = False, device = 'cuda'):
         super(robust_clip, self).__init__()
         self.device = device
         self.main_num = get_num_classes(dataset)
@@ -84,9 +84,9 @@ class robust_clip(torch.nn.Module):
             self.denoising = denoising
             if denoising:
                 if dataset == 'cifar10':
-                    self.denoiser = cifar_ddpm(noise_sd, device = device)
+                    self.denoiser = cifar_ddpm(noise_sd, denoising_ckpt, device = device)
                 elif dataset == 'imagenet':
-                    self.denoiser = imagenet_gdm(noise_sd, device = device)
+                    self.denoiser = imagenet_gdm(noise_sd, denoising_ckpt, device = device)
                 self.denoiser.eval()
         self.gcn_model = gcn_model
         if self.gcn_model != None:
@@ -383,7 +383,7 @@ class MLN_GCN(torch.nn.Module):
         return non_target_values
 
 
-def load_gcn_from_ckpt(checkpoint):
+def load_gcn_from_ckpt(checkpoint, device):
     gcn_model = get_gcn(checkpoint['dataset'],
                         checkpoint['knowledge_path'],
                         checkpoint['eta'], 
@@ -392,6 +392,7 @@ def load_gcn_from_ckpt(checkpoint):
                         checkpoint['hidden_dim'], 
                         checkpoint['train_main'], 
                         checkpoint['attention'], 
-                        checkpoint['mode'])
+                        checkpoint['mode'],
+                        device = device)
     gcn_model.load_state_dict(checkpoint['gcn_state_dict'])
     return gcn_model

@@ -6,7 +6,7 @@ import clip
 import json
 from torch.utils.data import Dataset, DataLoader
 from collections import OrderedDict
-from classes_info import *
+from .classes_info import *
 from tqdm import tqdm
 # set this environment variable to the location of your imagenet directory if you want to read ImageNet data.
 # make sure your val directory is preprocessed to look like the train directory, e.g. by running this script
@@ -168,7 +168,10 @@ def get_knowledge_text_weights(text, model, batch_size = 500):
 #     return knowledge_dict
 
 def get_knowledge_sentences(dataset, knowledge_path):
-    knowledge = json.load(open(f'knowledge/{knowledge_path}.json'))
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    # Construct the full path to the knowledge file
+    full_path = os.path.join(dir_path, 'knowledge', f'{knowledge_path}.json')
+    knowledge = json.load(open(full_path))
     knowledge_dict = OrderedDict()
     knowledge_index = 0
     all_negative_statements = []
@@ -189,7 +192,10 @@ def get_knowledge_sentences(dataset, knowledge_path):
     return list(knowledge_dict.keys())#, all_negative_statements
 
 def get_knowledge_rules(dataset, knowledge_path, train_main = False):
-    knowledge = json.load(open(f'knowledge/{knowledge_path}.json'))
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    # Construct the full path to the knowledge file
+    full_path = os.path.join(dir_path, 'knowledge', f'{knowledge_path}.json')
+    knowledge = json.load(open(full_path))
     main_num = get_num_classes(dataset)
     gt_matrix = []
     indices = []
